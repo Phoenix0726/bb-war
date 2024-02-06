@@ -1,0 +1,38 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.game-menu {
+    width: 100%;
+    height: 100%;
+    background-image: url("/static/image/menu/background.jpg");
+    background-size: 100% 100%;
+    user-select: none;
+}
+
+.game-menu-field {
+    width: 20vw;
+    position: relative;
+    top: 67vh;
+    left: 40vw;
+}
+
+.game-menu-item {
+    color: white;
+    height: 5vh;
+    width: 18vw;
+    font-size: 4vh;
+    text-align: center;
+    padding: 1vh;
+    margin-bottom: 1vh;
+    background-color: rgba(39, 21, 28, 0.6);
+    border-radius: 10px;
+    letter-spacing: 0.5vw;
+    cursor: pointer;
+}
+
+.game-menu-item:hover {
+    transform: scale(1.2);
+    transition: 100ms;
+}
