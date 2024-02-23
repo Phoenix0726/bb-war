@@ -1,9 +1,7 @@
-from django.urls import path
-from game.views.settings.acwing.web.apply_code import apply_code
-from game.views.settings.acwing.web.receive_code import receive_code
+from django.urls import path, include
 
 
 urlpatterns = [
-    path("web/apply_code/", apply_code, name="settings_acwing_web_apply_code"),
-    path("web/receive_code/", receive_code, name="settings_acwing_web_receive_code"),
+    path("web/", include("game.urls.settings.acwing.web.index")),
+    path("acapp/", include("game.urls.settings.acwing.acapp.index")),
 ]
