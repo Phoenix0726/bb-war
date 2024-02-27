@@ -6,7 +6,7 @@ class Settings {
             this.platform = "ACAPP";
         }
         this.username = "";
-        this.photo = "";
+        this.photo = "https://tse1-mm.cn.bing.net/th/id/OIP-C.b6FislURK8IeQUVOKRV7hwHaHY?rs=1&pid=ImgDetMain";
 
         this.$settings = $(`
             <div class="settings">
@@ -141,7 +141,6 @@ class Settings {
                 password: password,
             },
             success: function(resp) {
-                console.log(resp);
                 if (resp.result === "success") {
                     location.reload();
                 } else {
@@ -153,14 +152,13 @@ class Settings {
 
     logout_on_remote() {    // 在远程服务器上注销登录
         if (this.platform === "ACAPP") {
-            return false;
+            this.root.AcWingOS.api.window.close();
         }
 
         $.ajax({
             url: "https://app6552.acapp.acwing.com.cn/settings/logout",
             type: "GET",
             success: function(resp) {
-                console.log(resp);
                 if (resp.result === "success") {
                     location.reload();
                 }
@@ -185,7 +183,6 @@ class Settings {
                 password_confirm: password_confirm,
             },
             success: function(resp) {
-                console.log(resp);
                 if (resp.result === "success") {
                     location.reload();
                 } else {
@@ -223,7 +220,6 @@ class Settings {
                 platform: outer.platform,
             },
             success: function(resp) {
-                console.log(resp);
                 if (resp.result === "success") {
                     outer.username = resp.username;
                     outer.photo = resp.photo;
@@ -255,7 +251,6 @@ class Settings {
         let outer = this;
 
         this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp) {
-            console.log(resp);
             if (resp.result === "success") {
                 outer.username = resp.username;
                 outer.photo = resp.photo;
@@ -279,7 +274,6 @@ class Settings {
             url: "https://app6552.acapp.acwing.com.cn/settings/acwing/web/apply_code",
             type: "GET",
             success: function(resp) {
-                console.log(resp);
                 if (resp.result == "success") {
                     window.location.replace(resp.apply_code_url);
                 }

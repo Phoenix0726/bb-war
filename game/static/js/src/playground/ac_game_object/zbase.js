@@ -5,8 +5,19 @@ class GameObject {
     constructor() {
         GAME_OBJECTS.push(this);
 
+        this.uuid = this.create_uuid();
+
         this.has_called_start = false;  // 是否调用过 start
         this.timedelta = 0;     // 两帧间的时间间隔
+    }
+
+    create_uuid() {
+        let uuid = "";
+        for (let i = 0; i < 8; i++) {
+            let x = parseInt(Math.floor(Math.random() * 10));
+            uuid += x;
+        }
+        return uuid;
     }
 
     start() {   // 第一帧执行
