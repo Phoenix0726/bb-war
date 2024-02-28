@@ -72,7 +72,7 @@ class Player extends GameObject {
 
         this.playground.gameMap.$canvas.mousedown(function(e) {
             if (outer.playground.state !== "fighting") {
-                return false;
+                return true;
             }
 
             const rect = outer.ctx.canvas.getBoundingClientRect();
@@ -106,7 +106,21 @@ class Player extends GameObject {
             }
         });
 
-        $(window).keydown(function(e) {
+        this.playground.gameMap.$canvas.keydown(function(e) {
+            if (e.which === 13) {   // enter
+                // 打开聊天框
+                if (outer.playground.mode === "multi mode") {
+                    outer.playground.chatField.show_input();
+                    return false;
+                }
+            }
+            if (e.which === 27) {   // esc
+                // 关闭聊天框
+                if (outer.playground.mode === "multi mode") {
+                    outer.playground.chatField.hide_input();
+                    return false;
+                }
+            }
             if (outer.playground.state !== "fighting") {
                 return true;
             }
@@ -158,7 +172,7 @@ class Player extends GameObject {
         this.x += d * Math.cos(angle);
         this.y += d * Math.sin(angle);
 
-        // this.move_length = 0;
+        this.move_length = 0;
 
         this.blink_coldtime = this.blink_coldtime_length;
     }
