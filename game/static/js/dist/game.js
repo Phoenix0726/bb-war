@@ -78,6 +78,9 @@ class GameObject {
     update() {  // 每一帧执行
     }
 
+    late_update() {     // 在每一帧的最后执行一次
+    }
+
     on_destroy() {  // 销毁前执行
     }
 
@@ -107,6 +110,12 @@ let GAME_ANIMATION = function(timestamp) {
             obj.update();
         }
     }
+
+    for (let i = 0; i < GAME_OBJECTS.length; i++) {
+        let obj = GAME_OBJECTS[i];
+        obj.late_update();
+    }
+
     last_timestamp = timestamp;
 
     requestAnimationFrame(GAME_ANIMATION);
@@ -460,7 +469,6 @@ class Player extends GameObject {
     blink(tx, ty) {
         let d = this.get_dist(this.x, this.y, tx, ty);
         d = Math.min(d, this.blink_maxdist);
-        console.log(this.uuid, d);
         let angle = Math.atan2(ty - this.y, tx - this.x);
         this.x += d * Math.cos(angle);
         this.y += d * Math.sin(angle);
@@ -515,6 +523,7 @@ class Player extends GameObject {
 
     update() {
         this.gameTime += this.timedelta / 1000;
+        this.update_win();
         this.update_move();
         if (this.playground.state === "fighting" && this.role === "me") {
             this.update_coldtime();
@@ -559,6 +568,13 @@ class Player extends GameObject {
 
         this.blink_coldtime -= this.timedelta / 1000;
         this.blink_coldtime = Math.max(this.blink_coldtime, 0);
+    }
+    
+    update_win() {
+        if (this.playground.state === "fighting" && this.role === "me" && this.playground.players.length === 1) {
+            this.playground.state = "over";
+            this.playground.scoreBoard.win();
+        }
     }
 
     render() {
@@ -630,13 +646,71 @@ class Player extends GameObject {
 
     on_destroy() {
         if (this.role === "me") {
-            this.playground.state = "over";
+            if (this.playground.state === "fighting") {
+                this.playground.state = "over";
+                this.playground.scoreBoard.lose();
+            }
         }
         for (let i = 0; i < this.playground.players.length; i++) {
             if (this.playground.players[i] == this) {
                 this.playground.players.splice(i, 1);
                 break;
             }
+        }
+    }
+}
+class ScoreBoard extends GameObject {
+    constructor(playground) {
+        super();
+        this.playground = playground;
+        this.ctx = this.playground.gameMap.ctx;
+
+        this.state = null;
+
+        this.winImg = new Image();
+        this.winImg.src = "https://cdn.acwing.com/media/article/image/2021/12/17/1_8f58341a5e-win.png";
+        this.loseImg = new Image();
+        this.loseImg.src = "https://cdn.acwing.com/media/article/image/2021/12/17/1_9254b5f95e-lose.png";
+    }
+
+    start() {
+    }
+
+    add_listening_events() {
+        let outer = this;
+        let $canvas = this.playground.gameMap.$canvas;
+        $canvas.on('click', function() {
+            outer.playground.hide();
+            outer.playground.root.menu.show();
+        });
+    }
+
+    win() {
+        this.state = "win";
+        let outer = this;
+        setTimeout(function() {
+            outer.add_listening_events();
+        }, 1000);
+    }
+
+    lose() {
+        this.state = "lose";
+        let outer = this;
+        setTimeout(function() {
+            outer.add_listening_events();
+        }, 1000);
+    }
+
+    late_update() {
+        this.render();
+    }
+
+    render() {
+        let len = this.playground.height / 2;
+        if (this.state === "win") {
+            this.ctx.drawImage(this.winImg, this.playground.width / 2 - len / 2, this.playground.height / 2 - len / 2, len, len);
+        } else if (this.state === "lose") {
+            this.ctx.drawImage(this.loseImg, this.playground.width / 2 - len / 2, this.playground.height / 2 - len / 2, len, len);
         }
     }
 }
@@ -922,9 +996,25 @@ class GamePlayground {
     start() {
         let outer = this;
 
-        $(window).resize(function() {
+        let uuid = this.create_uuid();
+        $(window).on(`resize.${uuid}`, function() {
             outer.resize();
         });
+
+        if (this.root.AcWingOS) {
+            this.root.AcWingOS.api.window.on_close(function() {
+                $(window).off(`resize.${uuid}`);
+            });
+        }
+    }
+
+    create_uuid() {
+        let uuid = "";
+        for (let i = 0; i < 8; i++) {
+            let x = parseInt(Math.floor(Math.random() * 10));
+            uuid += x;
+        }
+        return uuid;
     }
 
     show(mode) {
@@ -936,6 +1026,7 @@ class GamePlayground {
         this.height = this.$playground.height();
         this.gameMap = new GameMap(this);
         this.noticeBoard = new NoticeBoard(this);
+        this.scoreBoard = new ScoreBoard(this);
         this.playerCount = 0;
         
         this.resize();
@@ -964,6 +1055,27 @@ class GamePlayground {
     }
 
     hide() {
+        while (this.players && this.players.length > 0) {
+            this.players[0].destroy();
+        }
+
+        if (this.gameMap) {
+            this.gameMap.destroy();
+            this.gameMap = null;
+        }
+
+        if (this.noticeBoard) {
+            this.noticeBoard.destroy();
+            this.noticeBoard = null;
+        }
+
+        if (this.scoreBoard) {
+            this.scoreBoard.destroy();
+            this.scoreBoard = null;
+        }
+
+        this.$playground.empty();
+
         this.$playground.hide();
     }
 

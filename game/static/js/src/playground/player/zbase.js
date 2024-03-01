@@ -167,7 +167,6 @@ class Player extends GameObject {
     blink(tx, ty) {
         let d = this.get_dist(this.x, this.y, tx, ty);
         d = Math.min(d, this.blink_maxdist);
-        console.log(this.uuid, d);
         let angle = Math.atan2(ty - this.y, tx - this.x);
         this.x += d * Math.cos(angle);
         this.y += d * Math.sin(angle);
@@ -222,6 +221,7 @@ class Player extends GameObject {
 
     update() {
         this.gameTime += this.timedelta / 1000;
+        this.update_win();
         this.update_move();
         if (this.playground.state === "fighting" && this.role === "me") {
             this.update_coldtime();
@@ -266,6 +266,13 @@ class Player extends GameObject {
 
         this.blink_coldtime -= this.timedelta / 1000;
         this.blink_coldtime = Math.max(this.blink_coldtime, 0);
+    }
+    
+    update_win() {
+        if (this.playground.state === "fighting" && this.role === "me" && this.playground.players.length === 1) {
+            this.playground.state = "over";
+            this.playground.scoreBoard.win();
+        }
     }
 
     render() {
@@ -337,7 +344,10 @@ class Player extends GameObject {
 
     on_destroy() {
         if (this.role === "me") {
-            this.playground.state = "over";
+            if (this.playground.state === "fighting") {
+                this.playground.state = "over";
+                this.playground.scoreBoard.lose();
+            }
         }
         for (let i = 0; i < this.playground.players.length; i++) {
             if (this.playground.players[i] == this) {

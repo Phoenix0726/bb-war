@@ -17,9 +17,25 @@ class GamePlayground {
     start() {
         let outer = this;
 
-        $(window).resize(function() {
+        let uuid = this.create_uuid();
+        $(window).on(`resize.${uuid}`, function() {
             outer.resize();
         });
+
+        if (this.root.AcWingOS) {
+            this.root.AcWingOS.api.window.on_close(function() {
+                $(window).off(`resize.${uuid}`);
+            });
+        }
+    }
+
+    create_uuid() {
+        let uuid = "";
+        for (let i = 0; i < 8; i++) {
+            let x = parseInt(Math.floor(Math.random() * 10));
+            uuid += x;
+        }
+        return uuid;
     }
 
     show(mode) {
@@ -31,6 +47,7 @@ class GamePlayground {
         this.height = this.$playground.height();
         this.gameMap = new GameMap(this);
         this.noticeBoard = new NoticeBoard(this);
+        this.scoreBoard = new ScoreBoard(this);
         this.playerCount = 0;
         
         this.resize();
@@ -59,6 +76,27 @@ class GamePlayground {
     }
 
     hide() {
+        while (this.players && this.players.length > 0) {
+            this.players[0].destroy();
+        }
+
+        if (this.gameMap) {
+            this.gameMap.destroy();
+            this.gameMap = null;
+        }
+
+        if (this.noticeBoard) {
+            this.noticeBoard.destroy();
+            this.noticeBoard = null;
+        }
+
+        if (this.scoreBoard) {
+            this.scoreBoard.destroy();
+            this.scoreBoard = null;
+        }
+
+        this.$playground.empty();
+
         this.$playground.hide();
     }
 
