@@ -3,6 +3,7 @@ from django.core.cache import cache
 import requests
 from django.contrib.auth.models import User
 from random import randint
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from game.models.player.player import Player
 
@@ -43,10 +44,13 @@ def receive_code(request):
     # 如果用户已存在，直接登录
     if players.exists():
         player = players[0]
+        refresh = RefreshToken.for_user(player.user)
         return JsonResponse({
             'result': "success",
             'username': player.user.username,
             'photo': player.photo,
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
         })
 
     ### step3: 申请用户信息
@@ -67,8 +71,11 @@ def receive_code(request):
     user = User.objects.create(username=username)
     player = Player.objects.create(user=user, photo=photo, openid=openid)
 
+    refresh = RefreshToken.for_user(user)
     return JsonResponse({
         'result': "success",
         'username': player.user.username,
         'photo': player.photo,
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
     })

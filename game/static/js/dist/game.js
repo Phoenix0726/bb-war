@@ -1,3 +1,86 @@
+class Storage {
+
+    constructor(props) {
+        this.props = props || {}
+        this.source = this.props.source || window.localStorage
+        this.initRun();
+    }
+    initRun(){
+        /*
+        * set 存储方法
+        * @ param {String}     key 键
+        * @ param {String}     value 值，存储的值可能是数组/对象，不能直接存储，需要转换 JSON.stringify
+        * @ param {String}     expired 过期时间，以分钟为单位
+        */
+        const reg = new RegExp("__expires__");
+        let data = this.source;
+        let list = Object.keys(data);
+        if(list.length > 0){
+            list.map((key,v)=>{
+                if( !reg.test(key )){
+                    let now = Date.now();
+                    let expires = data[`${key}__expires__`]||Date.now+1;
+                    if (now >= expires ) {
+                        this.remove(key);
+                    };
+                };
+                return key;
+            });
+        };
+    }
+
+	set(key, value, expired) {
+	    /*
+	    * set 存储方法
+	    * @ param {String}     key 键
+	    * @ param {String}     value 值，
+	    * @ param {String}     expired 过期时间，以毫秒为单位，非必须
+	    */
+	    let source = this.source;
+	    source[key] = JSON.stringify(value);
+	    if (expired){
+	        source[`${key}__expires__`] = Date.now() + expired
+	    };
+	    return value;
+	}
+
+    get(key) {
+        /*
+        * get 获取方法
+        * @ param {String}     key 键
+        * @ param {String}     expired 存储时为非必须字段，所以有可能取不到，默认为 Date.now+1
+        */
+        const source = this.source,
+        expired = source[`${key}__expires__`]||Date.now+1;
+        const now = Date.now();
+    
+        if ( now >= expired ) {
+            this.remove(key);
+            return;
+        }
+        const value = source[key] ? JSON.parse(source[key]) : source[key];
+        return value;
+	}
+
+	remove(key) {
+	    const data = this.source,
+	        value = data[key];
+	    delete data[key];
+	    delete data[`${key}__expires__`];
+	    return value;
+	}
+
+}
+
+var storage = new Storage();
+
+/*  Example
+var ls=new Storage();
+ls.set('userId','zhangsan',5000);
+window.setInterval(()=>{
+        console.log(ls.get("userId"));
+},1000)
+*/
 class GameMenu {
     constructor(root) {
         this.root = root;
@@ -810,7 +893,7 @@ class MultiPlayerSocket {
     constructor(playground) {
         this.playground = playground;
 
-        this.ws = new WebSocket("wss://app6552.acapp.acwing.com.cn/wss/multiplayer/");
+        this.ws = new WebSocket("wss://app6552.acapp.acwing.com.cn/wss/multiplayer/?token=" + playground.root.access);
         
         this.start();
     }
@@ -1178,11 +1261,30 @@ class Settings {
         this.root.$game.append(this.$settings);
 
         this.start();
+
+
+        this.expire = 3600 * 1000;      // 1h
     }
     
     start() {
         this.getinfo();
         this.add_listening_events();
+    }
+
+    refresh_jwt_token() {
+        setInterval(() => {
+            $.ajax({
+                url: "https://app6552.acapp.acwing.com.cn/settings/token/refresh/",
+                type: "POST",
+                data: {
+                    refresh: this.root.refresh,
+                },
+                success: resp => {
+                    this.root.access = resp.access;
+                    storage.set('access', resp.access, this.expire);
+                }
+            });
+        }, 4.5 * 60 * 1000);
     }
 
     add_listening_events() {
@@ -1220,26 +1322,31 @@ class Settings {
         });
     }
 
-    login_on_remote() {     // 在远程服务器上登录
-        let outer = this;
-
-        let username = this.$login_username.val();
-        let password = this.$login_password.val();
+    login_on_remote(username, password) {     // 在远程服务器上登录
+        username = username || this.$login_username.val();
+        password = password || this.$login_password.val();
         this.$login_errormsg.empty();
 
         $.ajax({
-            url: "https://app6552.acapp.acwing.com.cn/settings/login",
-            type: "GET",
+            url: "https://app6552.acapp.acwing.com.cn/settings/token/",
+            type: "POST",
             data: {
                 username: username,
                 password: password,
             },
-            success: function(resp) {
-                if (resp.result === "success") {
-                    location.reload();
-                } else {
-                    outer.$login_errormsg.html(resp.result);
-                }
+            success: resp => {
+                this.root.access = resp.access;
+                this.root.refresh = resp.refresh;
+
+                storage.set('access', this.root.access, this.expire);
+                storage.set('refresh', this.root.refresh, this.expire);
+
+                this.refresh_jwt_token();
+
+                this.getinfo_web();
+            },
+            error: () => {
+                this.$login_errormsg.html("用户名或密码错误");
             }
         });
     }
@@ -1249,38 +1356,33 @@ class Settings {
             this.root.AcWingOS.api.window.close();
         }
 
-        $.ajax({
-            url: "https://app6552.acapp.acwing.com.cn/settings/logout",
-            type: "GET",
-            success: function(resp) {
-                if (resp.result === "success") {
-                    location.reload();
-                }
-            }
-        });
+        storage.remove('access');
+        storage.remove('refresh');
+
+        this.root.access = "";
+        this.root.refresh = "";
+        location.href = "/";
     }
 
     register_on_remote() {  // 在远程服务器上注册
-        let outer = this;
-
         let username = this.$register_username.val();
         let password = this.$register_password.val();
         let password_confirm = this.$register_password_confirm.val();
         this.$register_errormsg.empty();
 
         $.ajax({
-            url: "https://app6552.acapp.acwing.com.cn/settings/register",
-            type: "GET",
+            url: "https://app6552.acapp.acwing.com.cn/settings/register/",
+            type: "POST",
             data: {
                 username: username,
                 password: password,
                 password_confirm: password_confirm,
             },
-            success: function(resp) {
+            success: resp => {
                 if (resp.result === "success") {
-                    location.reload();
+                    this.login_on_remote(username, password);
                 } else {
-                    outer.$register_errormsg.html(resp.result);
+                    this.$register_errormsg.html(resp.result);
                 }
             }
         });
@@ -1300,28 +1402,37 @@ class Settings {
         if (this.platform === "ACAPP") {
             this.getinfo_acapp();
         } else {
-            this.getinfo_web();
+            this.root.access = storage.get('access');
+            this.root.refresh = storage.get('refresh');
+
+            if (this.root.access) {
+                this.getinfo_web();
+                this.refresh_jwt_token();
+            } else {
+                this.login();
+            }
         }
     }
 
     getinfo_web() {
-        let outer = this;
-
         $.ajax({
             url: "https://app6552.acapp.acwing.com.cn/settings/getinfo/",
             type: "GET",
             data: {
-                platform: outer.platform,
+                platform: this.platform,
             },
-            success: function(resp) {
+            headers: {
+                'Authorization': "Bearer " + this.root.access,
+            },
+            success: resp => {
                 if (resp.result === "success") {
-                    outer.username = resp.username;
-                    outer.photo = resp.photo;
+                    this.username = resp.username;
+                    this.photo = resp.photo;
 
-                    outer.hide();
-                    outer.root.menu.show();
+                    this.hide();
+                    this.root.menu.show();
                 } else {
-                    outer.login();
+                    this.login();
                 }
             }
         });
@@ -1342,15 +1453,17 @@ class Settings {
     }
 
     acapp_login(appid, redirect_uri, scope, state) {
-        let outer = this;
-
-        this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp) {
+        this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, resp => {
             if (resp.result === "success") {
-                outer.username = resp.username;
-                outer.photo = resp.photo;
+                this.username = resp.username;
+                this.photo = resp.photo;
 
-                outer.hide();
-                outer.root.menu.show();
+                this.root.access = resp.access;
+                this.root.refresh = resp.refresh;
+                this.refresh_jwt_token();
+
+                this.hide();
+                this.root.menu.show();
             }
         });
     }
@@ -1376,10 +1489,13 @@ class Settings {
     }
 }
 export class Game {
-    constructor(id, AcWingOS) {
+    constructor(id, AcWingOS, access, refresh) {
         this.id = id;
         this.$game = $('#' + id);
         this.AcWingOS = AcWingOS;
+
+        this.access = access;
+        this.refresh = refresh;
 
         this.menu = new GameMenu(this);
         this.playground = new GamePlayground(this);

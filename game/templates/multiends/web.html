@@ -12,7 +12,7 @@
     <script type="module">
         import {Game} from "{% static 'js/dist/game.js' %}"
         $(document).ready(function() {
-            let game = new Game("container");
+            let game = new Game("container", null, "{{ access }}", "{{ refresh }}");
         });
     </script>
 </body>
