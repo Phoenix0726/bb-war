@@ -86,7 +86,7 @@ class Settings {
         this.start();
 
 
-        this.expire = 3600 * 1000;      // 1h
+        this.expire = 60 * 60 * 1000;      // 1h
     }
     
     start() {
@@ -105,9 +105,12 @@ class Settings {
                 success: resp => {
                     this.root.access = resp.access;
                     storage.set('access', resp.access, this.expire);
+                },
+                error: () => {
+                    this.login();
                 }
             });
-        }, 4.5 * 60 * 1000);
+        }, 60 * 1000);
     }
 
     add_listening_events() {
@@ -227,6 +230,7 @@ class Settings {
         } else {
             this.root.access = storage.get('access');
             this.root.refresh = storage.get('refresh');
+            console.log(storage.get('access'));
 
             if (this.root.access) {
                 this.getinfo_web();
@@ -257,6 +261,9 @@ class Settings {
                 } else {
                     this.login();
                 }
+            },
+            error: () => {
+                this.login();
             }
         });
     }

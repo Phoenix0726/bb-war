@@ -38,11 +38,17 @@ class Player extends GameObject {
             this.fireball_coldtime = this.fireball_coldtime_length;
             this.fireball_img = new Image();
             this.fireball_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_9340c86053-fireball.png";
+            this.fireball_img_x = 1.5;
+            this.fireball_img_y = 0.9;
+            this.fireball_img_r = 0.04;
 
             this.blink_coldtime_length = 5;     // 闪现5秒冷却时间
             this.blink_coldtime = this.blink_coldtime_length;
             this.blink_img = new Image();
             this.blink_img.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_daccabdc53-blink.png";
+            this.blink_img_x = 1.62;
+            this.blink_img_y = 0.9;
+            this.blink_img_r = 0.04;
         }
     }
 
@@ -62,8 +68,23 @@ class Player extends GameObject {
             this.move_to(tx, ty);
         }
     }
-    
+
+    isMobileDevice() {
+        return navigator.userAgent.match(
+            /Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i
+        );
+    }
+
     add_listening_events() {
+        if (this.isMobileDevice) {
+            this.add_listening_events_mobile();
+        } else {
+            this.add_listening_events_pc();
+        }
+    }
+    
+    // pc端事件
+    add_listening_events_pc() {
         let outer = this;
 
         this.playground.gameMap.$canvas.on("contextmenu", function() {
@@ -137,6 +158,69 @@ class Player extends GameObject {
                 }
                 outer.curSkill = "blink";
                 return false;
+            }
+        });
+    }
+
+    // 移动端事件
+    add_listening_events_mobile() {
+        let outer = this;
+
+        let lastTouchend = 0;
+
+        this.playground.gameMap.$canvas[0].addEventListener('touchend', function(e) {
+            let now = Date.now();
+            if (now - lastTouchend <= 300) {    // 禁用双击放大
+                e.preventDefault();
+            }
+            lastTouchend = now;
+
+            if (outer.playground.state !== "fighting") {
+                return true;
+            }
+
+            const rect = outer.ctx.canvas.getBoundingClientRect();
+
+            let tx = (e.changedTouches[0].pageX - rect.left) / outer.playground.scale;
+            let ty = (e.changedTouches[0].pageY - rect.top) / outer.playground.scale;
+
+            console.log(tx, ty);
+
+            // 点击火球技能
+            if (outer.get_dist(tx, ty, outer.fireball_img_x, outer.fireball_img_y) <= outer.fireball_img_r && outer.fireball_coldtime <= outer.eps) {
+                outer.curSkill = "fireball";
+                return false;
+            }
+
+            // 点击瞬移技能
+            if (outer.get_dist(tx, ty, outer.blink_img_x, outer.blink_img_y) <= outer.blink_img_r && outer.blink_coldtime <= outer.eps) {
+                outer.curSkill = "blink";
+                return false;
+            }
+
+            // 释放火球技能
+            if (outer.curSkill === "fireball") {
+                let fireball = outer.shoot_fireball(tx, ty);
+                if (outer.playground.mode === "multi mode") {
+                    outer.playground.mps.send_shoot_fireball(fireball.uuid, tx, ty);
+                }
+                outer.curSkill = null;
+                return false;
+            }
+
+            // 释放瞬移技能
+            if (outer.curSkill === "blink") {
+                outer.blink(tx, ty);
+                if (outer.playground.mode === "multi mode") {
+                    outer.playground.mps.send_blink(tx, ty);
+                }
+                outer.curSkill = null;
+                return false;
+            }
+
+            outer.move_to(tx, ty);
+            if (outer.playground.mode === "multi mode") {
+                outer.playground.mps.send_move_to(tx, ty);
             }
         });
     }
