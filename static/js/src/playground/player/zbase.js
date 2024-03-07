@@ -184,8 +184,6 @@ class Player extends GameObject {
             let tx = (e.changedTouches[0].pageX - rect.left) / outer.playground.scale;
             let ty = (e.changedTouches[0].pageY - rect.top) / outer.playground.scale;
 
-            console.log(tx, ty);
-
             // 点击火球技能
             if (outer.get_dist(tx, ty, outer.fireball_img_x, outer.fireball_img_y) <= outer.fireball_img_r && outer.fireball_coldtime <= outer.eps) {
                 outer.curSkill = "fireball";
@@ -383,9 +381,9 @@ class Player extends GameObject {
 
     render_skill_coldtime() {
         let scale = this.playground.scale;
-        let x = 1.5;
-        let y = 0.9;
-        let r = 0.04;
+        let x = this.fireball_img_x;
+        let y = this.fireball_img_y;
+        let r = this.fireball_img_r;;
 
         // 火球技能图标
         this.ctx.save();
@@ -406,7 +404,9 @@ class Player extends GameObject {
         }
 
         // 闪现技能图标
-        x = 1.62;
+        x = this.blink_img_x;
+        y = this.blink_img_y;
+        r = this.blink_img_r;
         this.ctx.save();
         this.ctx.beginPath();
         this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);

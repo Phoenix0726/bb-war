@@ -7,6 +7,7 @@
 .game-menu {
     width: 100%;
     height: 100%;
+    position: absolute;
     background-image: url("/static/image/menu/background.jpg");
     background-size: 100% 100%;
     user-select: none;
@@ -36,6 +37,153 @@
 .game-menu-item:hover {
     transform: scale(1.2);
     transition: 100ms;
+}
+
+.game-menu-bar {
+    position: relative;
+    width: 20vw;
+    top: 58%;
+    left: 75%;
+}
+
+.game-menu-bar-item {
+    display: inline-block;
+    width: 10vh;
+    height: 6vh;
+    cursor: pointer;
+}
+
+.game-menu-bar-item > img {
+    display: block;
+    width: 60%;
+    height: 100%;
+    margin: auto;
+}
+
+.game-menu-bar-item > img:hover {
+    transform: scale(1.2);
+    transition: 100ms;
+}
+
+.game-menu-bar-item > div {
+    display: block;
+    color: white;
+    font-size: 1.5vh;
+    text-align: center;
+}
+
+.game-ranklist {
+    display: block;
+    width: 30%;
+    height: 50%;
+    position: absolute;
+    top: 30%;
+    right: 7%;
+    background-image: url("https://bpic.588ku.com/back_pic/06/13/03/206264f914e4bab.jpg");
+    border-radius: 5px;
+}
+
+.game-ranklist-item {
+    display: block;
+    width: 100%;
+    height: 9%;
+    position: relative;
+    background-color: rgba(13, 20, 28, 0.4);
+}
+
+.game-ranklist-item-0 {
+    background-color: rgba(15, 22, 31, 0.4);
+}
+
+.game-ranklist-item-1 {
+    background-color: rgba(11, 18, 25, 0.41);
+}
+
+.game-ranklist-item:hover {
+    background-color: rgba(13, 20, 28, 0.6);
+}
+
+.game-ranklist-item > div {
+    display: inline-block;
+    position: relative;
+    float: left;
+    height: 100%;
+    font-size: 2.5vh;
+    color: white;
+    text-align: center;
+    transform: translateY(-50%);
+    top: 50%;
+}
+
+.game-ranklist-ranking {
+    width: 20%;
+}
+
+.game-ranklist-username {
+    width: 50%;
+}
+
+.game-ranklist-score {
+    width: 25%;
+}
+
+.game-friendlist {
+    display: block;
+    width: 20%;
+    height: 50%;
+    position: absolute;
+    top: 30%;
+    right: 4%;
+    background-image: url("https://bpic.588ku.com/back_pic/19/04/20/77926289dc0b35d5d9ed00096bfa3fb5.jpg");
+    border-radius: 5px;
+    overflow: auto;
+}
+
+.game-friendlist::-webkit-scrollbar {
+    width: 0;
+}
+
+.game-friendlist-item {
+    display: block;
+    width: 100%;
+    height: 9%;
+    position: relative;
+    background-color: rgba(13, 20, 28, 0.4);
+}
+
+.game-friendlist-item:hover {
+    background-color: rgba(13, 20, 28, 0.6);
+}
+
+.game-friend-photo {
+    display: inline-block;
+    height: 100%;
+    width: 30%;
+    position: relative;
+    float: left;
+    text-align: center;
+}
+
+.game-friend-photo > img {
+    position: relative;
+    height: 80%;
+    border: 1px solid white;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: auto;
+    transform: translateY(-50%);
+    top: 50%;
+}
+
+.game-friend-username {
+    display: inline-block;
+    width: 70%;
+    position: relative;
+    float: right;
+    color: white;
+    font-size: 1.8vh;
+    transform: translateY(-50%);
+    top: 50%;
 }
 
 /*=============== playground ===============*/

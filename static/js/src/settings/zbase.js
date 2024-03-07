@@ -111,6 +111,22 @@ class Settings {
                 }
             });
         }, 60 * 1000);
+
+		/*setTimeout(() => {
+            $.ajax({
+                url: "https://app6552.acapp.acwing.com.cn/settings/ranklist/",
+                type: "get",
+                headers: {
+                    'Authorization': "Bearer " + this.root.access,
+                },
+                success: resp => {
+                    console.log(resp);
+                },
+                error: () => {
+                    console.log(storage.get('access'));
+                }
+            });
+        }, 5000);*/
     }
 
     add_listening_events() {
@@ -230,7 +246,6 @@ class Settings {
         } else {
             this.root.access = storage.get('access');
             this.root.refresh = storage.get('refresh');
-            console.log(storage.get('access'));
 
             if (this.root.access) {
                 this.getinfo_web();

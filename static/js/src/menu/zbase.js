@@ -8,6 +8,16 @@ class GameMenu {
                     <div class="game-menu-item game-menu-item-multi">多人模式</div>
                     <div class="game-menu-item game-menu-item-settings">退出</div>
                 </div>
+                <div class="game-menu-bar">
+                    <div class="game-menu-bar-item game-menu-ranklist">
+                        <img src="static/image/menu/ranklist.png">
+                        <div>排行榜</div>
+                    </div>
+                    <div class="game-menu-bar-item game-menu-friendlist">
+                        <img src="static/image/menu/friends.png">
+                        <div>好友列表</div>
+                    </div>
+                </div>
             </div>
         `);
 
@@ -16,6 +26,12 @@ class GameMenu {
         this.$single = this.$menu.find('.game-menu-item-single');
         this.$multi = this.$menu.find('.game-menu-item-multi');
         this.$settings = this.$menu.find('.game-menu-item-settings');
+
+        this.$ranklist = this.$menu.find('.game-menu-ranklist');
+        this.ranklist = new Ranklist(this);
+
+        this.$friendList = this.$menu.find('.game-menu-friendlist');
+        this.friendList = new FriendList(this);
 
         this.start();
     }
@@ -39,6 +55,22 @@ class GameMenu {
 
         this.$settings.click(function() {
             outer.root.settings.logout_on_remote();
+        });
+
+        this.$ranklist.click(function() {
+            if (outer.ranklist.isShow) {
+                outer.ranklist.hide();
+            } else {
+                outer.ranklist.show();
+            }
+        });
+
+        this.$friendList.click(function() {
+            if (outer.friendList.isShow) {
+                outer.friendList.hide();
+            } else {
+                outer.friendList.show();
+            }
         });
     }
 

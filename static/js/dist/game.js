@@ -81,6 +81,133 @@ window.setInterval(()=>{
         console.log(ls.get("userId"));
 },1000)
 */
+class FriendList {
+    constructor(menu) {
+        this.menu = menu;
+        this.$friendList = $(`
+            <div class="game-friendlist">
+            </div>
+        `);
+        this.$friendList.hide();
+        this.isShow = false;
+        this.menu.$menu.append(this.$friendList);
+
+        this.start();
+    }
+
+    start() {
+        setTimeout(() => {
+            $.ajax({
+                url: "https://app6552.acapp.acwing.com.cn/settings/friends/",
+                type: "GET",
+                headers: {
+                    'Authorization': "Bearer " + this.menu.root.access,
+                },
+                success: resp => {
+                    for (let i = 0; i < resp.length; i++) {
+                        this.showFriend(resp[i]);
+                    }
+
+                    this.add_listening_events();
+                }
+            });
+        });
+    }
+
+    add_listening_events() {
+        this.$friendList.on('click', ".game-friendlist-item", function() {
+            let username = $(this).find('.game-friend-username').text();
+            console.log(username);
+        });
+    }
+
+    showFriend(friend) {
+        let $item = (`
+            <div class="game-friendlist-item">
+                <div class="game-friend-photo">
+                    <img src="${friend.photo}">
+                </div>
+                <div class="game-friend-username">${friend.username}</div>
+            </div>
+        `);
+        this.$friendList.append($item);
+    }
+
+    show() {
+        this.isShow = true;
+        this.$friendList.show();
+    }
+
+    hide() {
+        this.isShow = false;
+        this.$friendList.hide();
+    }
+}
+class Ranklist {
+    constructor(menu) {
+        this.menu = menu;
+        this.$ranklist = $(`
+            <div class="game-ranklist">
+                <div class="game-ranklist-item">
+                    <div class="game-ranklist-ranking">排名</div>
+                    <div class="game-ranklist-username">用户名</div>
+                    <div class="game-ranklist-score">积分</div>
+                </div>
+            </div>
+        `);
+        this.$ranklist.hide();
+        this.isShow = false;
+        this.menu.$menu.append(this.$ranklist);
+
+        this.start();
+    }
+
+    start() {
+        this.players = [];
+        setTimeout(() => {
+            $.ajax({
+                url: "https://app6552.acapp.acwing.com.cn/settings/ranklist/",
+                type: "GET",
+                headers: {
+                    'Authorization': "Bearer " + this.menu.root.access,
+                },
+                success: resp => {
+                    for (let i = 0; i < resp.length; i++) {
+                        this.players.push(resp[i]);
+                    }
+                    for (let i = 0; i < this.players.length; i++) {
+                        this.add_player(i + 1, this.players[i]);
+                    }
+                },
+                error: () => {
+                    this.menu.root.settings.login();
+                }
+            });
+        }, 1000);
+    }
+
+    add_player(ranking, player) {
+        let style = ranking % 2;
+        let $item = (`
+            <div class="game-ranklist-item game-ranklist-item-${style}">
+                <div class="game-ranklist-ranking">${ranking}</div>
+                <div class="game-ranklist-username">${player.username}</div>
+                <div class="game-ranklist-score">${player.score}</div>
+            </div>
+        `);
+        this.$ranklist.append($item);
+    }
+
+    show() {
+        this.isShow = true;
+        this.$ranklist.show();
+    }
+
+    hide() {
+        this.isShow = false;
+        this.$ranklist.hide();
+    }
+}
 class GameMenu {
     constructor(root) {
         this.root = root;
@@ -91,6 +218,16 @@ class GameMenu {
                     <div class="game-menu-item game-menu-item-multi">多人模式</div>
                     <div class="game-menu-item game-menu-item-settings">退出</div>
                 </div>
+                <div class="game-menu-bar">
+                    <div class="game-menu-bar-item game-menu-ranklist">
+                        <img src="static/image/menu/ranklist.png">
+                        <div>排行榜</div>
+                    </div>
+                    <div class="game-menu-bar-item game-menu-friendlist">
+                        <img src="static/image/menu/friends.png">
+                        <div>好友列表</div>
+                    </div>
+                </div>
             </div>
         `);
 
@@ -99,6 +236,12 @@ class GameMenu {
         this.$single = this.$menu.find('.game-menu-item-single');
         this.$multi = this.$menu.find('.game-menu-item-multi');
         this.$settings = this.$menu.find('.game-menu-item-settings');
+
+        this.$ranklist = this.$menu.find('.game-menu-ranklist');
+        this.ranklist = new Ranklist(this);
+
+        this.$friendList = this.$menu.find('.game-menu-friendlist');
+        this.friendList = new FriendList(this);
 
         this.start();
     }
@@ -122,6 +265,22 @@ class GameMenu {
 
         this.$settings.click(function() {
             outer.root.settings.logout_on_remote();
+        });
+
+        this.$ranklist.click(function() {
+            if (outer.ranklist.isShow) {
+                outer.ranklist.hide();
+            } else {
+                outer.ranklist.show();
+            }
+        });
+
+        this.$friendList.click(function() {
+            if (outer.friendList.isShow) {
+                outer.friendList.hide();
+            } else {
+                outer.friendList.show();
+            }
         });
     }
 
@@ -569,8 +728,6 @@ class Player extends GameObject {
             let tx = (e.changedTouches[0].pageX - rect.left) / outer.playground.scale;
             let ty = (e.changedTouches[0].pageY - rect.top) / outer.playground.scale;
 
-            console.log(tx, ty);
-
             // 点击火球技能
             if (outer.get_dist(tx, ty, outer.fireball_img_x, outer.fireball_img_y) <= outer.fireball_img_r && outer.fireball_coldtime <= outer.eps) {
                 outer.curSkill = "fireball";
@@ -768,9 +925,9 @@ class Player extends GameObject {
 
     render_skill_coldtime() {
         let scale = this.playground.scale;
-        let x = 1.5;
-        let y = 0.9;
-        let r = 0.04;
+        let x = this.fireball_img_x;
+        let y = this.fireball_img_y;
+        let r = this.fireball_img_r;;
 
         // 火球技能图标
         this.ctx.save();
@@ -791,7 +948,9 @@ class Player extends GameObject {
         }
 
         // 闪现技能图标
-        x = 1.62;
+        x = this.blink_img_x;
+        y = this.blink_img_y;
+        r = this.blink_img_r;
         this.ctx.save();
         this.ctx.beginPath();
         this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
@@ -1372,6 +1531,22 @@ class Settings {
                 }
             });
         }, 60 * 1000);
+
+		/*setTimeout(() => {
+            $.ajax({
+                url: "https://app6552.acapp.acwing.com.cn/settings/ranklist/",
+                type: "get",
+                headers: {
+                    'Authorization': "Bearer " + this.root.access,
+                },
+                success: resp => {
+                    console.log(resp);
+                },
+                error: () => {
+                    console.log(storage.get('access'));
+                }
+            });
+        }, 5000);*/
     }
 
     add_listening_events() {
@@ -1491,7 +1666,6 @@ class Settings {
         } else {
             this.root.access = storage.get('access');
             this.root.refresh = storage.get('refresh');
-            console.log(storage.get('access'));
 
             if (this.root.access) {
                 this.getinfo_web();

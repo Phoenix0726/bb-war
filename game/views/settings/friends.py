@@ -4,16 +4,15 @@ from rest_framework.permissions import IsAuthenticated
 from game.models.player.player import Player
 
 
-class RanklistView(APIView):
+class FriendsView(APIView):
     permission_classes = ([IsAuthenticated])
 
     def get(self, request):
-        players = Player.objects.all().order_by('-score')[:10]
+        friends = Player.objects.all()
         resp = []
-        for player in players:
+        for friend in friends:
             resp.append({
-                'username': player.user.username,
-                'photo': player.photo,
-                'score': player.score,
+                'username': friend.user.username,
+                'photo': friend.photo,
             })
         return Response(resp)
