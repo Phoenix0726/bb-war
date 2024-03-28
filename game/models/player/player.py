@@ -11,3 +11,21 @@ class Player(models.Model):
     def __str__(self):
         return str(self.user)
 
+
+class Relation(models.Model):
+    username1 = models.CharField(default="", max_length=50)
+    username2 = models.CharField(default="", max_length=50)
+
+    def __str__(self):
+        return self.username1 + ' ' + self.username2
+
+
+class Message(models.Model):
+    username1 = models.CharField(default="", max_length=50, blank=True, null=True)
+    username2 = models.CharField(default="", max_length=50, blank=True, null=True)
+    text = models.CharField(default="", max_length=50, blank=True, null=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.username1 + ' -> ' + self.username2 + ' ' + self.text
+

@@ -50,16 +50,17 @@ class Pool:
         print("Match Success: %s %s %s" % (players[0].username, players[1].username, players[2].username))
         room_name = "room-%s-%s-%s" % (players[0].uuid, players[1].uuid, players[2].uuid)
 
+        ps = []
         for player in players:
             async_to_sync(channel_layer.group_add)(room_name, player.channel_name)
-            '''players.append({
+            ps.append({
                 'uuid': player.uuid,
                 'username': player.username,
                 'photo': player.photo,
                 'hp': 100,
-            })'''
+            })
 
-        cache.set(room_name, players, 3600)
+        cache.set(room_name, ps, 3600)
 
         for player in players:
             async_to_sync(channel_layer.group_send) (
@@ -68,6 +69,7 @@ class Pool:
                     'type': "group_send_event",
                     'event': "create player",
                     'uuid': player.uuid,
+                    'username': player.username,
                     'photo': player.photo,
                 }
             )

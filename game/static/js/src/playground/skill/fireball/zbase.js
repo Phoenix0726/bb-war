@@ -12,7 +12,7 @@ class FireBall extends GameObject {
         this.color = "orange";
         this.speed = 0.5;
         this.move_length = 1;
-        this.damage = 0.01;
+        this.damage = 20;
         this.eps = 0.01;
     }
 

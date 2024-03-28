@@ -16,6 +16,8 @@ class Player extends GameObject {
         this.photo = photo;
         this.eps = 0.01;
         
+        this.hp = 100;
+
         this.curSkill = null;
         this.damage_vx = 0;
         this.damage_vy = 0;
@@ -76,7 +78,7 @@ class Player extends GameObject {
     }
 
     add_listening_events() {
-        if (this.isMobileDevice) {
+        if (this.isMobileDevice()) {
             this.add_listening_events_mobile();
         } else {
             this.add_listening_events_pc();
@@ -283,18 +285,20 @@ class Player extends GameObject {
             new Particle(this.playground, x, y, radius, color, vx, vy, speed, move_length);
         }
 
-        this.radius -= damage;
-        if (this.radius < this.eps) {
+        this.hp -= damage;
+
+        if (this.hp < this.eps) {
             this.destroy();
             return false;
         }
         this.damage_vx = Math.cos(angle);
         this.damage_vy = Math.sin(angle);
-        this.damage_speed = damage * 100;
+        this.damage_speed = 1;
         this.speed *= 0.8;
     }
 
     receive_attack(x, y, angle, damage, ball_uuid, attacker) {
+        console.log(x, y);
         attacker.destroy_fireball(ball_uuid);
         this.x = x;
         this.y = y;
@@ -323,6 +327,7 @@ class Player extends GameObject {
             this.move_length = 0;
             this.x += this.damage_vx * this.damage_speed * this.timedelta / 1000 * 0.5;
             this.y += this.damage_vy * this.damage_speed * this.timedelta / 1000 * 0.5;
+            console.log(this.timedelta / 1000);
             this.damage_speed *= this.friction;
         } else {
             if (this.move_length < this.eps) {
@@ -359,17 +364,18 @@ class Player extends GameObject {
 
     render() {
         let scale = this.playground.scale;
+        let radius = this.radius * (1 - 0.5 * (100 - this.hp) / 100);
         if (this.role != "robot") {
             this.ctx.save();
             this.ctx.beginPath();
-            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
+            this.ctx.arc(this.x * scale, this.y * scale, radius * scale, 0, Math.PI * 2, false);
             this.ctx.stroke();
             this.ctx.clip();
-            this.ctx.drawImage(this.img, (this.x - this.radius) * scale, (this.y - this.radius) * scale, this.radius * 2 * scale, this.radius * 2 * scale);
+            this.ctx.drawImage(this.img, (this.x - radius) * scale, (this.y - radius) * scale, radius * 2 * scale, radius * 2 * scale);
             this.ctx.restore();
         } else {
             this.ctx.beginPath();
-            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
+            this.ctx.arc(this.x * scale, this.y * scale, radius * scale, 0, Math.PI * 2, false);
             this.ctx.fillStyle = this.color;
             this.ctx.fill();
         }

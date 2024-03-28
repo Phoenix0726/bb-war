@@ -28,6 +28,20 @@ class FriendList {
                     this.add_listening_events();
                 }
             });
+            $.ajax({
+                url: "https://app6552.acapp.acwing.com.cn/settings/messages/",
+                type: "GET",
+                data: {
+                    username1: "test",
+                    username2: "test2",
+                },
+                success: resp => {
+                    console.log(resp);
+                },
+                error: () => {
+                    console.log("error");
+                }
+            });
         });
     }
 
